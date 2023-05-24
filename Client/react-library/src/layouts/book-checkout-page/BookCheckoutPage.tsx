@@ -3,6 +3,8 @@ import BookModel from "../../models/BookModel";
 import LoadingSpinner from "../utils/LoadingSpinner";
 import { StarsReview } from "./StarsReview";
 import { CheckoutAndReviewBox } from "./CheckoutAndReviewBox";
+import ReviewModel from "../../models/ReviewModel";
+import { LatestReviews } from "./LatestReviews";
 
 type Props = {};
 
@@ -10,6 +12,12 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
     const [book, setBook] = useState<BookModel>();
     const [isLoading, setIsLoading] = useState(true);
     const [httpError, setHttpError] = useState(null);
+
+    // Review state
+    const [reviews, setRevieiws] = useState<ReviewModel[]>([]);
+    const [totalStars, setTotalStars] = useState(0);
+    const [isLoadingReview, setIsLoadingReview] = useState(true);
+
     const bookId = window.location.pathname.split("/")[2];
 
     useEffect(() => {
@@ -49,7 +57,58 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
         return () => {};
     }, []);
 
-    if (isLoading) {
+    useEffect(() => {
+        const fetchBookReviews = async () => {
+            const reviewUrl: string = `http://localhost:8080/api/reviews/search/findByBookId?bookId=${bookId}`;
+
+            const responseReviews = await fetch(reviewUrl);
+
+            if (!responseReviews.ok) {
+                throw new Error(
+                    "Response not ok: an error occured in fetchBookReviews"
+                );
+            }
+
+            const responseJsonReviews = await responseReviews.json();
+            const responseData = responseJsonReviews["_embedded"]["reviews"];
+            const loadedReviews: ReviewModel[] = [];
+
+            let weightedStarReviews: number = 0;
+
+            for (const key in responseData) {
+                loadedReviews.push({
+                    id: responseData[key]["id"],
+                    userEmail: responseData[key]["userEmail"],
+                    date: responseData[key]["date"],
+                    rating: responseData[key]["rating"],
+                    bookId: responseData[key]["bookId"],
+                    reviewDescription: responseData[key]["reviewDescription"],
+                });
+
+                weightedStarReviews =
+                    weightedStarReviews + responseData[key]["rating"];
+            }
+
+            if (loadedReviews) {
+                const round = (
+                    Math.round(
+                        (weightedStarReviews / loadedReviews.length) * 2
+                    ) / 2
+                ).toFixed(1);
+                setTotalStars(Number(round));
+            }
+
+            setRevieiws(loadedReviews);
+            setIsLoadingReview(false);
+        };
+
+        fetchBookReviews().catch((error: any) => {
+            setHttpError(error.message);
+            setIsLoadingReview(false);
+        });
+    }, []);
+
+    if (isLoading || isLoadingReview) {
         return <LoadingSpinner prompt={"Loading Carousel..."} />;
     }
 
@@ -60,6 +119,8 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
             </div>
         );
     }
+
+    console.log(reviews);
 
     return (
         <div>
@@ -87,13 +148,19 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
                             <h2>{book?.title}</h2>
                             <h5 className="text-primary">{book?.author}</h5>
                             <p className="lead">{book?.description}</p>
-                            <StarsReview rating={5} size={32} />
+                            <StarsReview rating={totalStars} size={32} />
                         </div>
                     </div>
                     <CheckoutAndReviewBox book={book} mobile={false} />
                 </div>
 
                 <hr />
+
+                <LatestReviews
+                    reviews={reviews}
+                    bookId={book?.id}
+                    mobile={false}
+                />
             </div>
 
             <div className="container d-lg-none mt-5">
@@ -119,11 +186,18 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
                         <h2>{book?.title}</h2>
                         <h5 className="text-primary">{book?.author}</h5>
                         <p className="lead">{book?.description}</p>
-                        <StarsReview rating={5} size={32} />
+                        <StarsReview rating={totalStars} size={32} />
                     </div>
                 </div>
                 <CheckoutAndReviewBox book={book} mobile={true} />
+
                 <hr />
+
+                <LatestReviews
+                    reviews={reviews}
+                    bookId={book?.id}
+                    mobile={true}
+                />
             </div>
         </div>
     );
