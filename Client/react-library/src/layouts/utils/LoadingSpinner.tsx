@@ -17,7 +17,7 @@ const LoadingSpinner: React.FC<Props> = (props) => {
             >
                 <span className="spinner-border spinner-border-md " />
                 <p className="mt-3" style={{ marginLeft: 10 }}>
-                    {prompt}
+                    {prompt ? prompt : "Loading..."}
                 </p>
             </button>
         </div>

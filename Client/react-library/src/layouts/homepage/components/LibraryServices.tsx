@@ -1,6 +1,11 @@
+import { useOktaAuth } from "@okta/okta-react";
+import { Link } from "react-router-dom";
+
 type Props = {};
 
 const LibraryServices: React.FC<Props> = (props) => {
+    const { oktaAuth, authState } = useOktaAuth();
+
     return (
         <div className="container my-5">
             <div className="row p-4 align-items-center border shadow-lg">
@@ -13,12 +18,22 @@ const LibraryServices: React.FC<Props> = (props) => {
                         library admin's a personal message!
                     </p>
                     <div className="d-grid gap-2 justify-content-md-start mb-4 mb-lg-3">
-                        <a
-                            className="btn bg-primary btn-lg text-white"
-                            href="#"
-                        >
-                            Sign up
-                        </a>
+                        {authState?.isAuthenticated ? (
+                            <Link
+                                type="button"
+                                className="btn main-color btn-lg text-white"
+                                to={"/#"}
+                            >
+                                Library services
+                            </Link>
+                        ) : (
+                            <Link
+                                className="btn bg-primary btn-lg text-white"
+                                to={"/login"}
+                            >
+                                Sign up
+                            </Link>
+                        )}
                     </div>
                 </div>
                 <div className="col-lg-4 offset-lg-1 shadow-lg ">
