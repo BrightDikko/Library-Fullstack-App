@@ -1,9 +1,19 @@
+import { useOktaAuth } from "@okta/okta-react";
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import LoadingSpinner from "../utils/LoadingSpinner";
 
 type Props = {};
 
 const Navbar: React.FC<Props> = (props) => {
+    const { oktaAuth, authState } = useOktaAuth();
+    if (!authState)
+        return <LoadingSpinner prompt={"Validating Credentials..."} />;
+
+    const handleLogout = async () => oktaAuth.signOut();
+
+    console.log("Authstate: ", authState);
+
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark py-3">
             <div className="container-fluid">
@@ -41,15 +51,25 @@ const Navbar: React.FC<Props> = (props) => {
                     </ul>
 
                     <ul className="navbar-nav ms-auto">
-                        <li className="nav-item mt-2">
-                            <a
-                                type="button"
-                                href="#"
-                                className="btn btn-outline-light"
-                            >
-                                Sign in
-                            </a>
-                        </li>
+                        {!authState.isAuthenticated ? (
+                            <li className="nav-item mt-2">
+                                <Link
+                                    to={"/login"}
+                                    className="btn btn-outline-light"
+                                >
+                                    Sign in
+                                </Link>
+                            </li>
+                        ) : (
+                            <li>
+                                <button
+                                    className="btn btn-outline-light"
+                                    onClick={handleLogout}
+                                >
+                                    Sign Out
+                                </button>
+                            </li>
+                        )}
                     </ul>
                 </div>
             </div>
