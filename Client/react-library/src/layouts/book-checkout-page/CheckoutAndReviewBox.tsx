@@ -4,6 +4,7 @@ import BookModel from "../../models/BookModel";
 type Props = {
     book: BookModel | undefined;
     mobile: boolean;
+    currentLoansCount: number;
 };
 
 export const CheckoutAndReviewBox: React.FC<Props> = (props) => {
@@ -18,7 +19,7 @@ export const CheckoutAndReviewBox: React.FC<Props> = (props) => {
             <div className="card-body container">
                 <div className="mt-3">
                     <p>
-                        <b>0/5 </b>
+                        <b>{props.currentLoansCount}/5 </b>
                         books checked out
                     </p>
                     <hr />

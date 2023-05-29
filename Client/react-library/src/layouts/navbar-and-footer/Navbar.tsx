@@ -12,7 +12,7 @@ const Navbar: React.FC<Props> = (props) => {
 
     const handleLogout = async () => oktaAuth.signOut();
 
-    // console.log("Authstate: ", authState);
+    console.log("Authstate: ", authState);
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-dark py-3">
