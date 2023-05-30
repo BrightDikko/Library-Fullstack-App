@@ -26,6 +26,11 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
     const [isLoadingCurrentLoansCount, setIsLoadingCurrentLoansCount] =
         useState(true);
 
+    // Book Checkout State
+    const [isCheckedOut, setIsCheckedOut] = useState(false);
+    const [isLoadingBookCheckedOut, setIsLoadingBookCheckedOut] =
+        useState(true);
+
     const bookId = window.location.pathname.split("/")[2];
 
     useEffect(() => {
@@ -63,7 +68,7 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
         });
 
         return () => {};
-    }, []);
+    }, [isCheckedOut]);
 
     useEffect(() => {
         const fetchBookReviews = async () => {
@@ -135,7 +140,9 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
                 );
 
                 if (!currentLoansCountResponse.ok) {
-                    throw new Error("Something went wrong!");
+                    throw new Error(
+                        "Response not ok: an error occured in fetchUserCurrentLoansCount!"
+                    );
                 }
 
                 const currentLoansCountResponseJson =
@@ -151,9 +158,46 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
             setIsLoadingCurrentLoansCount(false);
             setHttpError(error.message);
         });
+    }, [authState, isCheckedOut]);
+
+    useEffect(() => {
+        const fetchUserCheckedOutBook = async () => {
+            if (authState && authState.isAuthenticated) {
+                const url = `http://localhost:8080/api/books/secure/ischeckedout/byuser?bookId=${bookId}`;
+                const requestOptions = {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${authState.accessToken?.accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                };
+                const bookCheckedOut = await fetch(url, requestOptions);
+
+                if (!bookCheckedOut.ok) {
+                    throw new Error(
+                        "Response not ok: an error occured in fetchUserCheckedOutBook"
+                    );
+                }
+
+                const bookCheckedOutResponseJson = await bookCheckedOut.json();
+                setIsCheckedOut(bookCheckedOutResponseJson);
+            }
+
+            setIsLoadingBookCheckedOut(false);
+        };
+
+        fetchUserCheckedOutBook().catch((error: any) => {
+            setIsLoadingBookCheckedOut(false);
+            setHttpError(error.message);
+        });
     }, [authState]);
 
-    if (isLoading || isLoadingReview || isLoadingCurrentLoansCount) {
+    if (
+        isLoading ||
+        isLoadingReview ||
+        isLoadingCurrentLoansCount ||
+        isLoadingBookCheckedOut
+    ) {
         return <LoadingSpinner prompt={"Loading Carousel..."} />;
     }
 
@@ -165,7 +209,23 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
         );
     }
 
-    console.log(reviews);
+    async function checkoutBook() {
+        const url = `http://localhost:8080/api/books/secure/checkout?bookId=${book?.id}`;
+
+        const requestOptions = {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${authState?.accessToken?.accessToken}`,
+                "Content-Type": "application/json",
+            },
+        };
+        const checkoutResponse = await fetch(url, requestOptions);
+        if (!checkoutResponse.ok) {
+            throw new Error("Something went wrong!");
+        }
+
+        setIsCheckedOut(true);
+    }
 
     return (
         <div>
@@ -200,6 +260,9 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
                         book={book}
                         mobile={false}
                         currentLoansCount={currentLoansCount}
+                        isAuthenticated={authState?.isAuthenticated}
+                        isCheckedOut={isCheckedOut}
+                        checkoutBook={checkoutBook}
                     />
                 </div>
 
@@ -242,6 +305,9 @@ const BookCheckoutPage: React.FC<Props> = (props) => {
                     book={book}
                     mobile={true}
                     currentLoansCount={currentLoansCount}
+                    isAuthenticated={authState?.isAuthenticated}
+                    isCheckedOut={isCheckedOut}
+                    checkoutBook={checkoutBook}
                 />
 
                 <hr />
