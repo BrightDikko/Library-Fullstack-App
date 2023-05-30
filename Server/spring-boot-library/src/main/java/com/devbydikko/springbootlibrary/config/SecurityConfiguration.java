@@ -18,8 +18,7 @@ public class SecurityConfiguration {
         http.csrf().disable();
 
         // Protect endpoints at /api/<type>/secure
-        // Protect endpoints at /api/<type>/secure
-        // Protect endpoints at /api/<type>/secure
+        // This lines (22 to 24) are what's giving the issue
         http.authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/books/secure/**").authenticated())
                 .oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
