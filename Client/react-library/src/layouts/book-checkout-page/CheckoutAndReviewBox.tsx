@@ -41,7 +41,7 @@ export const CheckoutAndReviewBox: React.FC<Props> = (props) => {
         }
 
         return (
-            <Link to="/#" className="btn btn-success btn-lg">
+            <Link to="/login" className="btn btn-success btn-lg">
                 Sign in
             </Link>
         );
